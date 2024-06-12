@@ -1,0 +1,10 @@
+PARAM epochs int 3
+PARAM learning_rate float 0.0001
+PARAM b1 float 0.5
+PARAM b2 float 0.99
+PARAM image_size int 128
+PARAM channels int 3
+PARAM mask_channels int 1
+
+
+PARAM dataset_url str ./data/celeba.zip

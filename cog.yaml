@@ -1,0 +1,18 @@
+build:
+  system_packages:
+    - "libgl1-mesa-glx"
+    - "libglib2.0-0"
+    - "libgl1"
+    - "python3-opencv"
+    - "libleptonica-dev"
+    - "tesseract-ocr"
+    - "libtesseract-dev"
+    - "python3-pil"
+    - "tesseract-ocr-eng"
+    - "tesseract-ocr-script-latn"
+    - "pkg-config"
+    - "build-essential"
+    - "libhdf5-dev"
+  python_version: "3.11"
+  python_requirements: requirements.txt
+train: "main.py:main"
