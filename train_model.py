@@ -58,7 +58,7 @@ def get_file_paths(directory, extensions):
         paths.extend(glob.glob(os.path.join(directory, f'*.{ext}')))
     return paths
 
-def train_model(
+async def train_model(
     dataset_path: str,
     parameters: dict[str, Any],
     result_id: str,
