@@ -12,7 +12,7 @@ from pymlab.train import train as pm_train
 from pymlab.utils import fetch_parameters
 from train_model import train_model as run_train_model
 
-async def main(
+def main(
     pkg_name: str,
     dataset: str,
     result_id: str,
