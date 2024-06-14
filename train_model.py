@@ -7,7 +7,7 @@ import os
 import glob
 import torch
 import torch.nn as nn
-from model1 import LFNet
+from model2 import LFNet
 from pymlab.train import TrainResults
 from pymlab.utils import make_file
 

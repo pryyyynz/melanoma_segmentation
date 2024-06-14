@@ -7,9 +7,8 @@ import torch.nn.functional as F
 class DDSConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, padding=1, dilation=2):
         super(DDSConv, self).__init__()
-        self.dilated_conv = nn.Conv2d(in_channels, out_channels, kernel_size, padding=padding, dilation=dilation)
-        self.depthwise_conv = nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size, padding=padding,
-                                        groups=out_channels)
+        self.dilated_conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding, dilation=dilation)
+        self.depthwise_conv = nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size, padding=padding, groups=out_channels)
         self.pointwise_conv = nn.Conv2d(out_channels, out_channels, kernel_size=1)
 
     def forward(self, x):
@@ -118,9 +117,9 @@ class LFNet(nn.Module):
         self.ddsconv2 = DDSConv(64, 128)
         self.ddsconv3 = DDSConv(1152, 2304)
         self.ddsconv4 = DDSConv(32, 32)
-        self.ddsconv5 = DDSConv(32, 32)
-        self.ddsconv6 = DDSConv(32, 32)
-        self.ddsconv7 = DDSConv(32, 32)
+        self.ddsconv5 = DDSConv(576, 32)
+        self.ddsconv6 = DDSConv(128, 32)
+        self.ddsconv7 = DDSConv(64, 32)
         self.dense_block1 = DenseNet(128, 64, 4)
         self.dense_block2 = DenseNet(384, 64, 4)
         self.dense_block3 = DenseNet(640, 64, 4)
@@ -136,102 +135,57 @@ class LFNet(nn.Module):
         self.rescbam5 = ResCBAM(128, 128)
         self.rescbam6 = ResCBAM(64, 64)
         self.rescbam7 = ResCBAM(32, 32)
-        self.res_block = ResidualBlock(32, 32)
+        self.res_block = ResidualBlock(2304, 32)
         self.contour_attention = ContourAttention(32, 32)
         self.final_conv = nn.Conv2d(32, 1, kernel_size=1)
 
     def forward(self, x):
-        print("Input shape:", x.shape)
 
-        # ddsconv
         x1 = self.ddsconv1(x)
-        print("After ddsconv1:", x1.shape)
 
-        # rescbam
         x2 = self.rescbam1(x1)
-        print("After rescbam1:", x2.shape)
 
-        # ddsconv
         x3 = self.ddsconv2(x2)
-        print("After ddsconv2:", x3.shape)
 
-        # rescbam
         x4 = self.rescbam2(x3)
-        print("After rescbam2:", x4.shape)
 
-        # densenet x4
         dense_out = self.dense_block1(x4)
-        print("After dense_block:", dense_out.shape)
         dense_out = self.dense_block2(dense_out)
-        print("After dense_block:", dense_out.shape)
         dense_out = self.dense_block3(dense_out)
-        print("After dense_block:", dense_out.shape)
         dense_out = self.dense_block4(dense_out)
-        print("After dense_block:", dense_out.shape)
 
-        # ddsconv
         x5 = self.ddsconv3(dense_out)
-        print("After ddsconv3:", x5.shape)
 
-        # rescbam
         x6 = self.rescbam3(x5)
-        print("After rescbam3:", x6.shape)
 
-        # deconv
         x7 = self.deconv1(x6)
-        print("After deconv1:", x7.shape)
 
-        # rescbam
         x8 = self.rescbam4(x7)
-        print("After rescbam4:", x8.shape)
 
-        # deconv
         x9 = self.deconv2(x8)
-        print("After deconv2:", x9.shape)
 
-        # rescbam
         x10 = self.rescbam5(x9)
-        print("After rescbam5:", x10.shape)
 
-        # deconv
         x11 = self.deconv3(x10)
-        print("After deconv3:", x11.shape)
 
-        # rescbam
         x12 = self.rescbam6(x11)
-        print("After rescbam6:", x12.shape)
 
-        # deconv
         x13 = self.deconv4(x12)
-        print("After deconv4:", x13.shape)
 
-        # rescbam
         x14 = self.rescbam7(x13)
-        print("After rescbam7:", x14.shape)
 
-        # ddsconv
         x15 = self.ddsconv4(x14)
-        print("After ddsconv4:", x15.shape)
 
-        # Updates
-        # Residual block
         x16 = self.res_block(x6)
-        print("After res_block:", x16.shape)
 
         x17 = self.ddsconv5(x8)
-        print("After ddsconv5:", x17.shape)
 
         x18 = self.ddsconv6(x10)
-        print("After ddsconv6:", x18.shape)
 
         x19 = self.ddsconv7(x12)
-        print("After ddsconv7:", x19.shape)
 
-        # ContourAttention
         x_contour_attention = self.contour_attention(x0=x16, x1=x17, x2=x18, x3=x19, x4=x15)
-        print("After contour_attention:", x_contour_attention.shape)
 
-        # Final convolution
+        x14 = F.interpolate(x14, size=(128, 128))
         out = self.final_conv(x14 + x_contour_attention)
-        print("Output shape:", out.shape)
         return out
