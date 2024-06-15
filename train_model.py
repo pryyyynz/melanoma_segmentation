@@ -157,6 +157,8 @@ async def train_model(
     with open(logger_path, 'rb') as f:
         files[logger_path] = f.read()
 
+    print('DONE')
+
     return TrainResults(
         pretrained_model=trained_model_path.split('/')[-1],
         metrics=metrics,
