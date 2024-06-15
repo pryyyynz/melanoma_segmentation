@@ -160,40 +160,44 @@ class LFNet(nn.Module):
         x4 = self.rescbam2(x3)
         print("After rescbam2:", x4.shape)
 
-        dense_out = self.dense_block1(x4)
-        print("After dense_block1:", dense_out.shape)
-        dense_out = self.dense_block2(dense_out)
-        print("After dense_block2:", dense_out.shape)
-        dense_out = self.dense_block3(dense_out)
-        print("After dense_block3:", dense_out.shape)
-        dense_out = self.dense_block4(dense_out)
-        print("After dense_block4:", dense_out.shape)
+        dense_out1 = self.dense_block1(x4)
+        print("After dense_block1:", dense_out1.shape)
+        dense_out2 = self.dense_block2(dense_out1)
+        print("After dense_block2:", dense_out2.shape)
+        dense_out3 = self.dense_block3(dense_out2)
+        print("After dense_block3:", dense_out3.shape)
+        dense_out4 = self.dense_block4(dense_out3)
+        print("After dense_block4:", dense_out4.shape)
 
-        x5 = self.ddsconv3(dense_out)
+        x5 = self.ddsconv3(dense_out4)
         print("After ddsconv3:", x5.shape)
 
         x6 = self.rescbam3(x5)
         print("After rescbam3:", x6.shape)
 
-        x7 = self.deconv1(x6)
+        dense_out4 = F.interpolate(dense_out4, size=(122, 122))
+        x7 = self.deconv1(x6 + dense_out4)
         print("After deconv1:", x7.shape)
 
         x8 = self.rescbam4(x7)
         print("After rescbam4:", x8.shape)
 
-        x9 = self.deconv2(x8)
+        dense_out2 = F.interpolate(dense_out2, size=(244, 244))
+        x9 = self.deconv2(x8 + dense_out2)
         print("After deconv2:", x9.shape)
 
         x10 = self.rescbam5(x9)
         print("After rescbam5:", x10.shape)
 
-        x11 = self.deconv3(x10)
+        x4 = F.interpolate(x4, size=(488, 488))
+        x11 = self.deconv3(x10 + x4)
         print("After deconv3:", x11.shape)
 
         x12 = self.rescbam6(x11)
         print("After rescbam6:", x12.shape)
 
-        x13 = self.deconv4(x12)
+        x2 = F.interpolate(x2, size=(976, 976))
+        x13 = self.deconv4(x12 + x2)
         print("After deconv4:", x13.shape)
 
         x14 = self.rescbam7(x13)

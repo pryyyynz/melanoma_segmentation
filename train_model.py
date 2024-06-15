@@ -75,9 +75,9 @@ async def train_model(
     # Retrieve training parameters
     image_size = parameters.get('image_size', 128)
     epochs = parameters.get('epochs', 10)
-    learning_rate = parameters.get('learning_rate', 0.001)
-    b1 = parameters.get('b1', 0.9)
-    b2 = parameters.get('b2', 0.999)
+    learning_rate = parameters.get('learning_rate', 0.0001)
+    b1 = parameters.get('b1', 0.5)
+    b2 = parameters.get('b2', 0.99)
     
     # Transformations for the dataset
     transform = transforms.Compose([
@@ -96,6 +96,8 @@ async def train_model(
     # Ensure datasets are sorted
     image_paths = sorted(image_paths)
     mask_paths = sorted(mask_paths)
+    print('images:', image_paths)
+    print('masks:', mask_paths)
 
     # Create dataset and dataloader
     dataset = CustomDataset(image_paths, mask_paths, transform)
