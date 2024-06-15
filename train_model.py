@@ -74,7 +74,7 @@ async def train_model(
 
     # Retrieve training parameters
     image_size = parameters.get('image_size', 128)
-    epochs = parameters.get('epochs', 10)
+    epochs = parameters.get('epochs', 300)
     learning_rate = parameters.get('learning_rate', 0.0001)
     b1 = parameters.get('b1', 0.5)
     b2 = parameters.get('b2', 0.99)
@@ -101,7 +101,7 @@ async def train_model(
 
     # Create dataset and dataloader
     dataset = CustomDataset(image_paths, mask_paths, transform)
-    dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
 
     # Initialize model, loss functions, and optimizer
     model = LFNet()
@@ -116,7 +116,6 @@ async def train_model(
     # Training loop
     for epoch in range(epochs):
         model.train()
-        # epoch_loss = 0
         for batch in dataloader:
             images = batch['image']
             masks = batch['mask']
