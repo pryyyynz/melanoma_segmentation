@@ -96,9 +96,15 @@ async def train_model(
     print('image_paths:', image_paths)
     print('mask_paths:', mask_paths)
 
+    # Ensure datasets are sorted
+    image_paths = sorted(image_paths)
+    mask_paths = sorted(mask_paths)
+    print('!!!!!!!Below is sorted!!!!!!!!')
+    print('image_paths:', image_paths)
+    print('mask_paths:', mask_paths)
+
     # Create dataset and dataloader
     dataset = CustomDataset(image_paths, mask_paths, transform)
-    print('dataset:', dataset)
     dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
 
     # Initialize model, loss functions, and optimizer
@@ -114,7 +120,7 @@ async def train_model(
     # Training loop
     for epoch in range(epochs):
         model.train()
-        epoch_loss = 0
+        # epoch_loss = 0
         for batch in dataloader:
             images = batch['image']
             masks = batch['mask']
