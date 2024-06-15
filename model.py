@@ -124,10 +124,10 @@ class LFNet(nn.Module):
         self.ddsconv1 = DDSConv(3, 64)
         self.ddsconv2 = DDSConv(64, 128)
         self.ddsconv3 = DDSConv(1152, 1152)
-        self.ddsconv4 = DDSConv(32, 32)
-        self.ddsconv5 = DDSConv(576, 32)
-        self.ddsconv6 = DDSConv(128, 32)
-        self.ddsconv7 = DDSConv(64, 32)
+        self.ddsconv4 = DDSConv(640, 32)
+        self.ddsconv5 = DDSConv(128, 32)
+        self.ddsconv6 = DDSConv(64, 32)
+        self.ddsconv7 = DDSConv(32, 32)
         self.dense_block1 = DenseNet(128, 64, 4)
         self.dense_block2 = DenseNet(384, 64, 4)
         self.dense_block3 = DenseNet(640, 64, 4)
@@ -199,22 +199,24 @@ class LFNet(nn.Module):
         x14 = self.rescbam7(x13)
         print("After rescbam7:", x14.shape)
 
-        x15 = self.ddsconv4(x14)
-        print("After ddsconv4:", x15.shape)
+        "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 
-        x16 = self.res_block(x6)
-        print("After res_block:", x16.shape)
+        x15 = self.res_block(x6)
+        print("After res_block:", x15.shape)
 
-        x17 = self.ddsconv5(x8)
+        x16 = self.ddsconv4(x8)
+        print("After ddsconv4:", x16.shape)
+
+        x17 = self.ddsconv5(x10)
         print("After ddsconv5:", x17.shape)
 
-        x18 = self.ddsconv6(x10)
+        x18 = self.ddsconv6(x12)
         print("After ddsconv6:", x18.shape)
 
-        x19 = self.ddsconv7(x12)
-        print("After ddsconv7:", x19.shape)
+        x19 = self.ddsconv7(x14)
+        print("After ddsconv7:", x15.shape)
 
-        x_contour_attention = self.contour_attention(x0=x16, x1=x17, x2=x18, x3=x19, x4=x15)
+        x_contour_attention = self.contour_attention(x0=x15, x1=x16, x2=x17, x3=x18, x4=x19)
         print("After contour_attention:", x_contour_attention.shape)
 
         # Final output
