@@ -25,9 +25,8 @@ class EPE_LOSS(nn.Module):
 # Dataset class to handle loading and transforming images and masks
 class CustomDataset(Dataset):
     def __init__(self, image_paths, mask_paths, transform=None):
-        # Ensure that image and mask paths are sorted
-        self.image_paths = sorted(image_paths)
-        self.mask_paths = sorted(mask_paths)
+        self.image_paths = image_paths
+        self.mask_paths = mask_paths
         self.transform = transform
 
     def __len__(self):
@@ -93,15 +92,10 @@ async def train_model(
     # Get file paths for images and masks
     image_paths = get_file_paths(image_dir, ['jpg'])
     mask_paths = get_file_paths(mask_dir, ['png'])
-    print('image_paths:', image_paths)
-    print('mask_paths:', mask_paths)
 
     # Ensure datasets are sorted
     image_paths = sorted(image_paths)
     mask_paths = sorted(mask_paths)
-    print('!!!!!!!Below is sorted!!!!!!!!')
-    print('image_paths:', image_paths)
-    print('mask_paths:', mask_paths)
 
     # Create dataset and dataloader
     dataset = CustomDataset(image_paths, mask_paths, transform)
@@ -126,12 +120,9 @@ async def train_model(
             masks = batch['mask']
 
             optimizer.zero_grad()
-            print('before training img:', images.shape)
             outputs = model(images)
-            print('outputs:', outputs.shape)
             outputsTransform = transforms.Compose([transforms.Resize((image_size, image_size))])
             outputs = outputsTransform(outputs)
-            print('after training:', outputs.shape)
 
             # Calculate losses
             bce = bce_loss(outputs, masks)
