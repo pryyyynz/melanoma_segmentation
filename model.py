@@ -175,29 +175,29 @@ class LFNet(nn.Module):
         x6 = self.rescbam3(x5)
         print("After rescbam3:", x6.shape)
 
-        dense_out4 = F.interpolate(dense_out4, size=(122, 122))
+        x6 = F.interpolate(x6, size=(124, 124))
         x7 = self.deconv1(x6 + dense_out4)
         print("After deconv1:", x7.shape)
 
         x8 = self.rescbam4(x7)
         print("After rescbam4:", x8.shape)
 
-        dense_out2 = F.interpolate(dense_out2, size=(244, 244))
+        x8 = F.interpolate(x8, size=(124, 124))
         x9 = self.deconv2(x8 + dense_out2)
         print("After deconv2:", x9.shape)
 
         x10 = self.rescbam5(x9)
         print("After rescbam5:", x10.shape)
 
-        x3 = F.interpolate(x3, size=(488, 488))
-        x11 = self.deconv3(x10 + x3)
+        x10 = F.interpolate(x10, size=(124, 124))
+        x11 = self.deconv3(x10 + x4)
         print("After deconv3:", x11.shape)
 
         x12 = self.rescbam6(x11)
         print("After rescbam6:", x12.shape)
 
-        x1 = F.interpolate(x1, size=(976, 976))
-        x13 = self.deconv4(x12 + x1)
+        x12 = F.interpolate(x12, size=(126, 126))
+        x13 = self.deconv4(x12 + x2)
         print("After deconv4:", x13.shape)
 
         x14 = self.rescbam7(x13)
