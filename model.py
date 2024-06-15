@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+# Depthwise Dilated Separable Convolution (DDSConv) module
 class DDSConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, padding=1, dilation=2):
         super(DDSConv, self).__init__()
@@ -18,6 +19,7 @@ class DDSConv(nn.Module):
         return x
 
 
+# Deconvolution layer for upsampling
 class DeconvLayer(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=4, stride=2, padding=1):
         super(DeconvLayer, self).__init__()
@@ -28,6 +30,7 @@ class DeconvLayer(nn.Module):
         return self.deconv(x)
 
 
+# DenseNet block, a series of layers that concatenate their outputs
 class DenseNet(nn.Module):
     def __init__(self, in_channels, growth_rate, num_layers):
         super(DenseNet, self).__init__()
@@ -51,6 +54,7 @@ class DenseNet(nn.Module):
         return torch.cat(features, 1)
 
 
+# CBAM module (Convolutional Block Attention Module)
 class CBAM(nn.Module):
     def __init__(self, in_channels, reduction_ratio=16):
         super(CBAM, self).__init__()
@@ -63,6 +67,7 @@ class CBAM(nn.Module):
         return x
 
 
+# channel attention module
 class ChannelAttention(nn.Module):
     def __init__(self, in_channels, reduction_ratio=16):
         super(ChannelAttention, self).__init__()
@@ -82,6 +87,7 @@ class ChannelAttention(nn.Module):
         return x * self.sigmoid(out)
 
 
+# spatial attention module
 class SpatialAttention(nn.Module):
     def __init__(self):
         super(SpatialAttention, self).__init__()
@@ -96,6 +102,7 @@ class SpatialAttention(nn.Module):
         return x * self.sigmoid(x)
 
 
+# Residual CBAM block
 class ResCBAM(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(ResCBAM, self).__init__()
@@ -110,6 +117,7 @@ class ResCBAM(nn.Module):
         return x
 
 
+# LFNet model definition
 class LFNet(nn.Module):
     def __init__(self):
         super(LFNet, self).__init__()
@@ -140,52 +148,32 @@ class LFNet(nn.Module):
         self.final_conv = nn.Conv2d(32, 1, kernel_size=1)
 
     def forward(self, x):
-
         x1 = self.ddsconv1(x)
-
         x2 = self.rescbam1(x1)
-
         x3 = self.ddsconv2(x2)
-
         x4 = self.rescbam2(x3)
-
         dense_out = self.dense_block1(x4)
         dense_out = self.dense_block2(dense_out)
         dense_out = self.dense_block3(dense_out)
         dense_out = self.dense_block4(dense_out)
-
         x5 = self.ddsconv3(dense_out)
-
         x6 = self.rescbam3(x5)
-
         x7 = self.deconv1(x6)
-
         x8 = self.rescbam4(x7)
-
         x9 = self.deconv2(x8)
-
         x10 = self.rescbam5(x9)
-
         x11 = self.deconv3(x10)
-
         x12 = self.rescbam6(x11)
-
         x13 = self.deconv4(x12)
-
         x14 = self.rescbam7(x13)
-
         x15 = self.ddsconv4(x14)
-
         x16 = self.res_block(x6)
-
         x17 = self.ddsconv5(x8)
-
         x18 = self.ddsconv6(x10)
-
         x19 = self.ddsconv7(x12)
-
         x_contour_attention = self.contour_attention(x0=x16, x1=x17, x2=x18, x3=x19, x4=x15)
 
+        # Final output
         x14 = F.interpolate(x14, size=(128, 128))
         out = self.final_conv(x14 + x_contour_attention)
         return out
