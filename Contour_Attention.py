@@ -78,33 +78,47 @@ class ContourAttention(nn.Module):
 
         # Process x0 through f1 and x1 through f2
         x_f1 = self.f1(x0)
+        print("After f1:", x_f1.shape)
+
         x_f2 = self.f2(x1)
+        print("After f2:", x_f2.shape)
 
         # Combine outputs of f1 and f2, process through g1
         x_g1 = self.g1(x_f1 + x_f2)
+        print("After g1:", x_g1.shape)
 
         # Process output of g1 through r1
         x_r1 = self.r1(x_g1)
+        print("After r1:", x_r1.shape)
         x_r1 = F.interpolate(x_r1, size=(128, 128))
 
         # Process x2 through f3, combine with output of r1, and process through g2
         x_f3 = self.f3(x2)
+        print("After f3:", x_f3.shape)
         x_g2 = self.g2(x_f3 + x_r1)
+        print("After g2:", x_g2.shape)
 
         # Process output of g2 through r2
         x_r2 = self.r2(x_g2)
+        print("After r2:", x_r2.shape)
         x_r2 = F.interpolate(x_r2, size=(128, 128))
 
         # Process x3 through f4, combine with output of r2, and process through g3
         x_f4 = self.f4(x3)
+        print("After f4:", x_f4.shape)
+
         x_g3 = self.g3(x_f4 + x_r2)
+        print("After g3:", x_g3.shape)
 
         # Process output of g3 through r3
         x_r3 = self.r3(x_g3)
+        print("After r3:", x_r3.shape)
         x_r3 = F.interpolate(x_r3, size=(128, 128))
 
         # Process x4 through f5, combine with output of r3, and process through g4
         x_f5 = self.f5(x4)
+        print("After f5:", x_f5.shape)
         x_g4 = self.g4(x_f5 + x_r3)
+        print("After g4:", x_g4.shape)
 
         return x_g4

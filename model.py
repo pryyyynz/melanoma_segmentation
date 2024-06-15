@@ -149,29 +149,73 @@ class LFNet(nn.Module):
 
     def forward(self, x):
         x1 = self.ddsconv1(x)
+        print("After ddsconv1:", x1.shape)
+
         x2 = self.rescbam1(x1)
+        print("After rescbam1:", x2.shape)
+
         x3 = self.ddsconv2(x2)
+        print("After ddsconv2:", x3.shape)
+
         x4 = self.rescbam2(x3)
+        print("After rescbam2:", x4.shape)
+
         dense_out = self.dense_block1(x4)
+        print("After dense_block1:", dense_out.shape)
         dense_out = self.dense_block2(dense_out)
+        print("After dense_block2:", dense_out.shape)
         dense_out = self.dense_block3(dense_out)
+        print("After dense_block3:", dense_out.shape)
         dense_out = self.dense_block4(dense_out)
+        print("After dense_block4:", dense_out.shape)
+
         x5 = self.ddsconv3(dense_out)
+        print("After ddsconv3:", x5.shape)
+
         x6 = self.rescbam3(x5)
+        print("After rescbam3:", x6.shape)
+
         x7 = self.deconv1(x6)
+        print("After deconv1:", x7.shape)
+
         x8 = self.rescbam4(x7)
+        print("After rescbam4:", x8.shape)
+
         x9 = self.deconv2(x8)
+        print("After deconv2:", x9.shape)
+
         x10 = self.rescbam5(x9)
+        print("After rescbam5:", x10.shape)
+
         x11 = self.deconv3(x10)
+        print("After deconv3:", x11.shape)
+
         x12 = self.rescbam6(x11)
+        print("After rescbam6:", x12.shape)
+
         x13 = self.deconv4(x12)
+        print("After deconv4:", x13.shape)
+
         x14 = self.rescbam7(x13)
+        print("After rescbam7:", x14.shape)
+
         x15 = self.ddsconv4(x14)
+        print("After ddsconv4:", x15.shape)
+
         x16 = self.res_block(x6)
+        print("After res_block:", x16.shape)
+
         x17 = self.ddsconv5(x8)
+        print("After ddsconv5:", x17.shape)
+
         x18 = self.ddsconv6(x10)
+        print("After ddsconv6:", x18.shape)
+
         x19 = self.ddsconv7(x12)
+        print("After ddsconv7:", x19.shape)
+
         x_contour_attention = self.contour_attention(x0=x16, x1=x17, x2=x18, x3=x19, x4=x15)
+        print("After contour_attention:", x_contour_attention.shape)
 
         # Final output
         x14 = F.interpolate(x14, size=(128, 128))
