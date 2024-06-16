@@ -101,7 +101,7 @@ async def train_model(
 
     # Create dataset and dataloader
     dataset = CustomDataset(image_paths, mask_paths, transform)
-    dataloader = DataLoader(dataset, batch_size=2, shuffle=False)
+    dataloader = DataLoader(dataset, batch_size=10, shuffle=False)
 
     # Initialize model, loss functions, and optimizer
     model = LFNet()
