@@ -74,7 +74,7 @@ async def train_model(
 
     # Retrieve training parameters
     image_size = parameters.get('image_size', 128)
-    epochs = parameters.get('epochs', 300)
+    epochs = parameters.get('epochs', 2)
     learning_rate = parameters.get('learning_rate', 0.0001)
     b1 = parameters.get('b1', 0.5)
     b2 = parameters.get('b2', 0.99)
