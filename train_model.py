@@ -111,7 +111,7 @@ async def train_model(
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(b1, b2))
 
     # Path for logging training progress
-    logger_path = make_file(result_id, 'train.log')
+    logger_path = make_file(file_name='train.log')
 
     # Training loop
     for epoch in range(epochs):
@@ -147,7 +147,7 @@ async def train_model(
     }
     files = {}
 
-    trained_model_path = make_file(result_id, 'model.pkl')
+    trained_model_path = make_file(file_name='model.pkl')
     # torch.save(model.state_dict(), "lfnet_model.pth")
     with open(trained_model_path, 'wb') as f:
         pickle.dump(model.state_dict, f)
