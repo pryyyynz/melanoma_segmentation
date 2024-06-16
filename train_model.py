@@ -74,7 +74,7 @@ async def train_model(
 
     # Retrieve training parameters
     image_size = parameters.get('image_size', 128)
-    epochs = parameters.get('epochs', 300)
+    epochs = parameters.get('epochs', 2)
     learning_rate = parameters.get('learning_rate', 0.0001)
     b1 = parameters.get('b1', 0.5)
     b2 = parameters.get('b2', 0.99)
@@ -101,7 +101,7 @@ async def train_model(
 
     # Create dataset and dataloader
     dataset = CustomDataset(image_paths, mask_paths, transform)
-    dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=2, shuffle=False)
 
     # Initialize model, loss functions, and optimizer
     model = LFNet()
@@ -122,8 +122,6 @@ async def train_model(
 
             optimizer.zero_grad()
             outputs = model(images)
-            outputsTransform = transforms.Compose([transforms.Resize((image_size, image_size))])
-            outputs = outputsTransform(outputs)
 
             # Calculate losses
             bce = bce_loss(outputs, masks)
@@ -136,6 +134,8 @@ async def train_model(
 
             # Update weights
             optimizer.step()
+
+        print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
 
         # save logging to file
         with open(logger_path, "a") as f:
@@ -151,7 +151,6 @@ async def train_model(
     # torch.save(model.state_dict(), "lfnet_model.pth")
     with open(trained_model_path, 'wb') as f:
         pickle.dump(model.state_dict, f)
-    
     with open(trained_model_path, 'rb') as f:
         files[trained_model_path] = f.read()
     with open(logger_path, 'rb') as f:
