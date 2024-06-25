@@ -20,9 +20,12 @@ def main(
     api_url: str,
     trained_model: str = "",
 ) -> Any:
-    parameters = fetch_parameters(config_path=os.getcwd() + "/config.txt")
+    parameters = fetch_parameters(config_path=os.getcwd() + "/config.train.txt")
     if pkg_name == "pymlab.train":
-        asyncio.run(pm_train(run_train_model,result_id=result_id, dataset_path=dataset, parameters=parameters, api_url=api_url, user_token=user_token))
+        parameters = fetch_parameters(config_path=os.getcwd() + "/config.train.txt")
+        asyncio.run(
+            pm_train(run_train_model, result_id=result_id, dataset_path=dataset, parameters=parameters, api_url=api_url,
+                     user_token=user_token))
     # elif pkg_name == "pymlab.test":
     #     await pm_test(run_test_model, result_id=result_id, api_url=api_url, user_token=user_token, data=dataset, parameters=parameters, trained_model=trained_model)
     return "hello"
