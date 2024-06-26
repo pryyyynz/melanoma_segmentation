@@ -148,9 +148,7 @@ async def train_model(
     files = {}
 
     trained_model_path = make_file(result_id, 'model.pkl')
-    # torch.save(model.state_dict(), "lfnet_model.pth")
-    with open(trained_model_path, 'wb') as f:
-        pickle.dump(model.state_dict, f)
+    torch.save(model.state_dict(), trained_model_path)
     with open(trained_model_path, 'rb') as f:
         files[trained_model_path] = f.read()
     with open(logger_path, 'rb') as f:
