@@ -7,6 +7,8 @@ import os
 import glob
 import torch
 import torch.nn as nn
+
+from danet import DANet
 from model import LFNet
 from pymlab.train import TrainResults
 from pymlab.utils import make_file
@@ -103,52 +105,76 @@ async def train_model(
     dataset = CustomDataset(image_paths, mask_paths, transform)
     dataloader = DataLoader(dataset, batch_size=10, shuffle=False)
 
-    # Initialize model, loss functions, and optimizer
-    model = LFNet()
+    # Initialize model_lfnet, loss_lf functions, and optimizer_lfnet
+    nclass = 2
+    model_lfnet = LFNet()
+    model_danet = DANet(nclass=nclass)
+
     bce_loss = nn.BCEWithLogitsLoss()
     l1_loss = nn.L1Loss()
     epe_loss_fn = EPE_LOSS()
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(b1, b2))
+
+    optimizer_lfnet = torch.optim.Adam(model_lfnet.parameters(), lr=learning_rate, betas=(b1, b2))
+    optimizer_danet = torch.optim.Adam(model_lfnet.parameters(), lr=learning_rate, betas=(b1, b2))
+
 
     # Path for logging training progress
     logger_path = make_file(result_id, 'train.log')
 
     # Training loop
     for epoch in range(epochs):
-        model.train()
+        model_lfnet.train()
+        model_danet.train()
         for batch in dataloader:
             images = batch['image']
             masks = batch['mask']
 
-            optimizer.zero_grad()
-            outputs = model(images)
+            optimizer_lfnet.zero_grad()
+            optimizer_danet.zero_grad()
 
-            # Calculate losses
-            bce = bce_loss(outputs, masks)
-            l1 = l1_loss(outputs, masks)
-            epe = epe_loss_fn(outputs, masks)
-            loss = bce + l1 + epe
+            outputs_lf = model_lfnet(images)
 
-            # Backward pass
-            loss.backward()
+            orig_label = (images, masks)  # RGB + label
+            orig_pred = (images, outputs_lf)  # RGB + pred
+            label_pred = (masks, outputs_lf)  # label + pred
+
+            # Forward pass through DANet
+            outputs_da = model_danet(orig_label, orig_pred, label_pred)
+
+            # Calculate losses for da-net
+            bce_da = bce_loss(outputs_da, masks)
+
+            # Backward pass and optimization
+            bce_da.backward()
+            optimizer_danet.step()
+
+            # Calculate losses for lf-net
+            l1 = l1_loss(outputs_lf, masks)
+            epe = epe_loss_fn(outputs_lf, masks)
+            loss_lf = bce_da + l1 + epe
+
+            # Backward pass and optimization
+            loss_lf.backward()
+            optimizer_lfnet.step()
 
             # Update weights
-            optimizer.step()
+            optimizer_lfnet.step()
 
-        print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
+        print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss_lf.item()}")
 
         # save logging to file
         with open(logger_path, "a") as f:
-            f.write(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}\n")        
+            f.write(f"Epoch {epoch + 1}/{epochs}, Loss: {loss_lf.item()}\n")
 
-    # Save the trained model and metrics
+    # Save the trained model_lfnet and metrics
     metrics = {
-        'loss': loss.item()
+        'loss_lf': loss_lf.item(),
+        'loss_da': bce_da.item()
     }
     files = {}
 
-    trained_model_path = make_file(result_id, 'model.pkl')
-    torch.save(model.state_dict(), trained_model_path)
+    trained_model_path = make_file(result_id, 'model_lfnet.pkl')
+    torch.save(model_lfnet.state_dict(), trained_model_path)
     with open(trained_model_path, 'rb') as f:
         files[trained_model_path] = f.read()
     with open(logger_path, 'rb') as f:
