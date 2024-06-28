@@ -106,7 +106,7 @@ async def train_model(
     dataloader = DataLoader(dataset, batch_size=10, shuffle=False)
 
     # Initialize model_lfnet, loss_lf functions, and optimizer_lfnet
-    nclass = 1
+    nclass = 2
     model_lfnet = LFNet()
     model_danet = DANet(nclass=nclass)
 
@@ -120,6 +120,9 @@ async def train_model(
 
     # Path for logging training progress
     logger_path = make_file(result_id, 'train.log')
+
+    all_da = []
+    all_lf = []
 
     # Training loop
     for epoch in range(epochs):
@@ -146,17 +149,29 @@ async def train_model(
             outputs_da = model_danet(orig_label, orig_pred, label_pred)
             print('danet output generated')
 
+            # Get predictions
+            preds = torch.argmax(outputs_da, dim=1).cpu().numpy().flatten()
+            all_da.extend(preds)
+            all_lf.extend(outputs_lf.cpu().numpy().flatten().astype(int))
+            print('flattening done')
+
             # Calculate losses for da-net
-            bce_da = bce_loss(outputs_da, masks)
+            bce_da = bce_loss(all_da, masks)
+            print('bce_da:', bce_da)
 
             # Backward pass and optimization
             bce_da.backward()
             optimizer_danet.step()
 
             # Calculate losses for lf-net
-            l1 = l1_loss(outputs_lf, masks)
-            epe = epe_loss_fn(outputs_lf, masks)
+            l1 = l1_loss(all_lf, masks)
+            print('l1:', l1)
+
+            epe = epe_loss_fn(all_lf, masks)
+            print('epe:', epe)
+            
             loss_lf = bce_da + l1 + epe
+            print('loss_lf:', loss_lf)
 
             # Backward pass and optimization
             loss_lf.backward()
