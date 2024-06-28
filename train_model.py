@@ -132,9 +132,9 @@ async def train_model(
             optimizer_danet.zero_grad()
 
             outputs_lf = model_lfnet(images)
+            print('lfnet output generated')
             outputs_lf = outputs_lf.convert("L")
             print('outputs_lf:', outputs_lf)
-            print('lfnet output generated')
 
             orig_label = (images, masks)  # RGB + label
             print('orig_label done')
