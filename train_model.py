@@ -27,37 +27,25 @@ class EPE_LOSS(nn.Module):
 
 # Dataset class to handle loading and transforming images and masks
 class CustomDataset(Dataset):
-    def __init__(self, image_paths, mask_paths, transform=None):
-        self.image_paths = image_paths
-        self.mask_paths = mask_paths
+    def __init__(self, images_dir, transform=None, is_label=False):
+        self.images_dir = images_dir
+        self.images_list = sorted(os.listdir(images_dir))
         self.transform = transform
+        self.is_label = is_label
 
     def __len__(self):
-        return len(self.image_paths)
+        return len(self.images_list)
 
     def __getitem__(self, idx):
-        image_path = self.image_paths[idx]
-        mask_path = self.mask_paths[idx]
-
-        # Ensure that the image and mask files exist
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"Image file not found: {image_path}")
-        if not os.path.exists(mask_path):
-            raise FileNotFoundError(f"Mask file not found: {mask_path}")
-
-        # Open the image and mask files
-        image = Image.open(image_path).convert("RGB")
-        mask = Image.open(mask_path).convert("L")
-
-        # Apply transformations if any
+        img_name = os.path.join(self.images_dir, self.images_list[idx])
+        image = Image.open(img_name)
+        if self.is_label:
+            image = image.convert("L")  # Convert labels to grayscale
+        if not self.is_label:
+            image = image.convert("RGB")
         if self.transform:
             image = self.transform(image)
-            mask = self.transform(mask)
-
-        return {
-            'image': image,
-            'mask': mask
-        }
+        return image
     
 
 # Function to get all file paths with specific extensions from a directory
@@ -92,24 +80,31 @@ async def train_model(
     image_dir = dataset_path + "/train"
     mask_dir = dataset_path + "/train_mask"
 
-    # Get file paths for images and masks
-    image_paths = get_file_paths(image_dir, ['jpg'])
-    mask_paths = get_file_paths(mask_dir, ['png'])
-
-    # Ensure datasets are sorted
-    image_paths = sorted(image_paths)
-    mask_paths = sorted(mask_paths)
-    print('images:', image_paths)
-    print('masks:', mask_paths)
+    # # Get file paths for images and masks
+    # image_paths = get_file_paths(image_dir, ['jpg'])
+    # mask_paths = get_file_paths(mask_dir, ['png'])
+    #
+    # # Ensure datasets are sorted
+    # image_paths = sorted(image_paths)
+    # mask_paths = sorted(mask_paths)
+    # print('images:', image_paths)
+    # print('masks:', mask_paths)
 
     # Create dataset and dataloader
-    dataset = CustomDataset(image_paths, mask_paths, transform)
-    dataloader = DataLoader(dataset, batch_size=10, shuffle=False)
+    dataset_image = CustomDataset(image_dir, transform=transform)
+    dataset_mask = CustomDataset(mask_dir, transform=transform, is_label=True)
+    # dataset_image = CustomDataset(image_dir, transform=transform)
+
+    dataloader_image = DataLoader(dataset_image, batch_size=10, shuffle=False)
+    dataloader_mask = DataLoader(dataset_mask, batch_size=10, shuffle=False)
 
     # Initialize model_lfnet, loss_lf functions, and optimizer_lfnet
     nclass = 2
     model_lfnet = LFNet()
     model_danet = DANet(nclass=nclass)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model_lfnet.to(device)
+    model_danet.to(device)
 
     bce_loss = nn.BCEWithLogitsLoss()
     l1_loss = nn.L1Loss()
@@ -129,14 +124,16 @@ async def train_model(
     for epoch in range(epochs):
         model_lfnet.train()
         model_danet.train()
-        for batch in dataloader:
-            images = batch['image']
-            masks = batch['mask']
+        for image, mask in zip(dataloader_image, dataloader_mask):
+            images = image.to(device)
+            masks = mask.to(device)
 
             optimizer_lfnet.zero_grad()
             optimizer_danet.zero_grad()
 
             outputs_lf = model_lfnet(images)
+            outputs_lf = outputs_lf.convert("L")
+            print('outputs_lf:', outputs_lf)
             print('lfnet output generated')
 
             orig_label = (images, masks)  # RGB + label
