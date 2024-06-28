@@ -11,6 +11,7 @@ __all__ = ['PAM_Module', 'CAM_Module']
 
 
 class PAM_Module(Module):
+
     """ Position attention module"""
     #Ref from SAGAN
     def __init__(self, in_dim):
@@ -23,6 +24,7 @@ class PAM_Module(Module):
         self.gamma = Parameter(torch.zeros(1))
 
         self.softmax = Softmax(dim=-1)
+
     def forward(self, x):
         """
             inputs :
@@ -50,11 +52,10 @@ class CAM_Module(Module):
     def __init__(self, in_dim):
         super(CAM_Module, self).__init__()
         self.chanel_in = in_dim
-
-
         self.gamma = Parameter(torch.zeros(1))
-        self.softmax  = Softmax(dim=-1)
-    def forward(self,x):
+        self.softmax = Softmax(dim=-1)
+
+    def forward(self, x):
         """
             inputs :
                 x : input feature maps( B X C X H X W)

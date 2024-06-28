@@ -106,7 +106,7 @@ async def train_model(
     dataloader = DataLoader(dataset, batch_size=10, shuffle=False)
 
     # Initialize model_lfnet, loss_lf functions, and optimizer_lfnet
-    nclass = 2
+    nclass = 1
     model_lfnet = LFNet()
     model_danet = DANet(nclass=nclass)
 
@@ -133,13 +133,18 @@ async def train_model(
             optimizer_danet.zero_grad()
 
             outputs_lf = model_lfnet(images)
+            print('lfnet output generated')
 
             orig_label = (images, masks)  # RGB + label
+            print('orig_label done')
             orig_pred = (images, outputs_lf)  # RGB + pred
+            print('orig_pred done')
             label_pred = (masks, outputs_lf)  # label + pred
+            print('label_pred done')
 
             # Forward pass through DANet
             outputs_da = model_danet(orig_label, orig_pred, label_pred)
+            print('danet output generated')
 
             # Calculate losses for da-net
             bce_da = bce_loss(outputs_da, masks)

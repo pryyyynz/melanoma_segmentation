@@ -6,6 +6,7 @@ from da_att import PAM_Module, CAM_Module
 
 __all__ = ['DANet', 'get_danet']
 
+
 class DANet(nn.Module):
     def __init__(self, nclass, norm_layer=nn.BatchNorm2d):
         super(DANet, self).__init__()
@@ -43,6 +44,7 @@ class DANet(nn.Module):
         x[0] = interpolate(x[0], imsize, mode='bilinear', align_corners=True)
 
         return x[0]
+
 
 class DANetHead(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer):
