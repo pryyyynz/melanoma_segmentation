@@ -133,7 +133,7 @@ async def train_model(
 
             outputs_lf = model_lfnet(images)
             print('lfnet output generated')
-            outputs_lf = outputs_lf.convert("L")
+            # outputs_lf = outputs_lf.convert("L")
             print('outputs_lf:', outputs_lf)
 
             orig_label = (images, masks)  # RGB + label
