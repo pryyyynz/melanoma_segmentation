@@ -24,6 +24,7 @@ class EPE_LOSS(nn.Module):
         epe_loss = torch.mean(torch.sqrt(torch.sum((output - mask) ** 2, dim=1)))
         return epe_loss
 
+
 # Dataset class to handle loading and transforming images and masks
 class CustomDataset(Dataset):
     def __init__(self, image_paths, mask_paths, transform=None):
@@ -169,7 +170,7 @@ async def train_model(
 
             epe = epe_loss_fn(all_lf, masks)
             print('epe:', epe)
-            
+
             loss_lf = bce_da + l1 + epe
             print('loss_lf:', loss_lf)
 
