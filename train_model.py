@@ -116,7 +116,7 @@ async def train_model(
     epe_loss_fn = EPE_LOSS()
 
     optimizer_lfnet = torch.optim.Adam(model_lfnet.parameters(), lr=learning_rate, betas=(b1, b2))
-    optimizer_danet = torch.optim.Adam(model_lfnet.parameters(), lr=learning_rate, betas=(b1, b2))
+    optimizer_danet = torch.optim.Adam(model_danet.parameters(), lr=learning_rate, betas=(b1, b2))
 
 
     # Path for logging training progress

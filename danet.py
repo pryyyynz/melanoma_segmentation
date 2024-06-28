@@ -29,16 +29,22 @@ class DANet(nn.Module):
 
     def forward(self, orig_label, orig_pred, label_pred):
         x1 = torch.cat(orig_label, dim=1)  # (RGB + label) -> (batch, 4, H, W)
+        print('x1', x1)
         x2 = torch.cat(orig_pred, dim=1)   # (RGB + pred) -> (batch, 4, H, W)
+        print('x2', x2)
         x3 = torch.cat(label_pred, dim=1)  # (label + pred) -> (batch, 2, H, W)
+        print('x3', x3)
 
         x1 = self.conv1(x1)
         x2 = self.conv2(x2)
         x3 = self.conv3(x3)
+        print('conv of x1, x2, x3 complete')
 
         x = torch.cat((x1, x2, x3), dim=1)
+        print('x is cat of all')
 
         x = self.head(x)
+        print('DANetHead done', x)
         x = list(x)
         imsize = orig_label[0].size()[2:]
         x[0] = interpolate(x[0], imsize, mode='bilinear', align_corners=True)
@@ -98,6 +104,7 @@ class DANetHead(nn.Module):
         sa_conv2 = self.conv8a(sa_conv1)
         sa_conv3 = self.sa(sa_conv2)
         sa_output = self.conv9a(sa_conv3)
+        print('PAM done')
 
         feat2 = self.conv5c(x)
         sc_feat2 = self.conv6c(feat2)
@@ -105,6 +112,7 @@ class DANetHead(nn.Module):
         sc_conv2 = self.conv8c(sc_conv1)
         sc_conv3 = self.sc(sc_conv2)
         sc_output = self.conv9c(sc_conv3)
+        print('SAM done')
 
         feat_sum = sa_conv3 + sc_conv3
 
