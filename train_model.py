@@ -10,8 +10,10 @@ import torch.nn as nn
 
 from danet import DANet
 from model import LFNet
-from pymlab.train import TrainResults
-from pymlab.utils import make_file
+
+
+# from pymlab.train import TrainResults
+# from pymlab.utils import make_file
 
 
 # custom End-Point Error (EPE) Loss class
@@ -46,7 +48,7 @@ class CustomDataset(Dataset):
         if self.transform:
             image = self.transform(image)
         return image
-    
+
 
 # Function to get all file paths with specific extensions from a directory
 def get_file_paths(directory, extensions):
@@ -55,21 +57,16 @@ def get_file_paths(directory, extensions):
         paths.extend(glob.glob(os.path.join(directory, f'*.{ext}')))
     return paths
 
-# Function to train the model
-async def train_model(
-    dataset_path: str,
-    parameters: dict[str, Any],
-    result_id: str,
-    **kwargs
-) -> TrainResults:
 
+# Function to train the model
+def train_model():
     # Retrieve training parameters
-    image_size = parameters.get('image_size', 128)
-    epochs = parameters.get('epochs', 2)
-    learning_rate = parameters.get('learning_rate', 0.0001)
-    b1 = parameters.get('b1', 0.5)
-    b2 = parameters.get('b2', 0.99)
-    
+    image_size = 128
+    epochs = 2
+    learning_rate = 0.0001
+    b1 = 0.5
+    b2 = 0.99
+
     # Transformations for the dataset
     transform = transforms.Compose([
         transforms.Resize((image_size, image_size)),
@@ -77,8 +74,8 @@ async def train_model(
     ])
 
     # Directories for images and masks
-    image_dir = dataset_path + "/train"
-    mask_dir = dataset_path + "/train_mask"
+    image_dir = "train"
+    mask_dir = "train_mask"
 
     # # Get file paths for images and masks
     # image_paths = get_file_paths(image_dir, ['jpg'])
@@ -110,12 +107,11 @@ async def train_model(
     l1_loss = nn.L1Loss()
     epe_loss_fn = EPE_LOSS()
 
-    optimizer_lfnet = torch.optim.Adam(model_lfnet.parameters(), lr=learning_rate, betas=(b1, b2))
-    optimizer_danet = torch.optim.Adam(model_danet.parameters(), lr=learning_rate, betas=(b1, b2))
-
+    optimizer = torch.optim.Adam(model_lfnet.parameters(), lr=learning_rate, betas=(b1, b2))
+    # optimizer_danet = torch.optim.Adam(model_danet.parameters(), lr=learning_rate, betas=(b1, b2))
 
     # Path for logging training progress
-    logger_path = make_file(result_id, 'train.log')
+    # logger_path = make_file(result_id, 'train.log')
 
     all_da = []
     all_lf = []
@@ -128,13 +124,13 @@ async def train_model(
             images = image.to(device)
             masks = mask.to(device)
 
-            optimizer_lfnet.zero_grad()
-            optimizer_danet.zero_grad()
+            optimizer.zero_grad()
+            # optimizer_danet.zero_grad()
 
             outputs_lf = model_lfnet(images)
             print('lfnet output generated')
             # outputs_lf = outputs_lf.convert("L")
-            print('outputs_lf:', outputs_lf)
+            # print('outputs_lf:', outputs_lf)
 
             orig_label = (images, masks)  # RGB + label
             print('orig_label done')
@@ -148,41 +144,55 @@ async def train_model(
             print('danet output generated')
 
             # Get predictions
-            preds = torch.argmax(outputs_da, dim=1).cpu().numpy().flatten()
-            all_da.extend(preds)
-            all_lf.extend(outputs_lf.cpu().numpy().flatten().astype(int))
+            # preds = torch.argmax(outputs_da, dim=1).cpu().numpy().flatten()
+            # all_da.extend(preds)
+            all_da = outputs_da.mean(dim=1, keepdim=True)
+
+            # all_lf.extend(outputs_lf.cpu().detach().numpy().flatten().astype(int))
             print('flattening done')
 
             # Calculate losses for da-net
+
+            # Convert list to tensor if it's not already a tensor
+            #             if isinstance(all_da, list):
+            #               all_da = torch.stack(all_da)  # Assuming all_da is a list of tensors
+
+            # # Make sure all_da and masks have the same shape
+            #             if all_da.size() != masks.size():
+            # raise ValueError(f"Shape mismatch: all_da has shape {all_da.size()} but masks has shape {masks.size()}")
+
+            # Compute the binary cross-entropy loss
             bce_da = bce_loss(all_da, masks)
             print('bce_da:', bce_da)
 
             # Backward pass and optimization
-            bce_da.backward()
-            optimizer_danet.step()
+            bce_da.backward(retain_graph=True)
+            optimizer.step()
 
             # Calculate losses for lf-net
-            l1 = l1_loss(all_lf, masks)
+            l1 = l1_loss(outputs_lf, masks)
             print('l1:', l1)
 
-            epe = epe_loss_fn(all_lf, masks)
+            epe = epe_loss_fn(outputs_lf, masks)
             print('epe:', epe)
 
             loss_lf = bce_da + l1 + epe
             print('loss_lf:', loss_lf)
+            optimizer.zero_grad()
 
             # Backward pass and optimization
-            loss_lf.backward()
-            optimizer_lfnet.step()
+            loss_lf.backward(retain_graph=True)
+            print('loss_lf_backward done')
+            # optimizer_lfnet.step()
 
             # Update weights
-            optimizer_lfnet.step()
+            optimizer.step()
 
         print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss_lf.item()}")
 
         # save logging to file
-        with open(logger_path, "a") as f:
-            f.write(f"Epoch {epoch + 1}/{epochs}, Loss: {loss_lf.item()}\n")
+        # with open(logger_path, "a") as f:
+        #     f.write(f"Epoch {epoch + 1}/{epochs}, Loss: {loss_lf.item()}\n")
 
     # Save the trained model_lfnet and metrics
     metrics = {
@@ -191,17 +201,21 @@ async def train_model(
     }
     files = {}
 
-    trained_model_path = make_file(result_id, 'model_lfnet.pkl')
-    torch.save(model_lfnet.state_dict(), trained_model_path)
-    with open(trained_model_path, 'rb') as f:
-        files[trained_model_path] = f.read()
-    with open(logger_path, 'rb') as f:
-        files[logger_path] = f.read()
+    # trained_model_path = make_file(result_id, 'model_lfnet.pkl')
+    # torch.save(model_lfnet.state_dict(), trained_model_path)
+    # with open(trained_model_path, 'rb') as f:
+    #     files[trained_model_path] = f.read()
+    # with open(logger_path, 'rb') as f:
+    #     files[logger_path] = f.read()
 
     print('DONE')
 
-    return TrainResults(
-        pretrained_model=trained_model_path.split('/')[-1],
-        metrics=metrics,
-        files=files
-    )
+
+train_model()
+# return TrainResults(
+#     pretrained_model=trained_model_path.split('/')[-1],
+#     metrics=metrics,
+#     files=files
+# )
+
+
