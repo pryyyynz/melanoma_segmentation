@@ -1,5 +1,3 @@
-import pickle
-from typing import Any, Mapping
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
@@ -8,8 +6,8 @@ import glob
 import torch
 import torch.nn as nn
 
-from danet import DANet
-from model import LFNet
+from models.danet import DANet
+from models.model import LFNet
 
 
 # from pymlab.train import TrainResults

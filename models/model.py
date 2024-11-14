@@ -1,4 +1,4 @@
-from Contour_Attention import ContourAttention, ResidualBlock
+from models.Contour_Attention import ContourAttention, ResidualBlock
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
