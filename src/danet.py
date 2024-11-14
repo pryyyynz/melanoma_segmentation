@@ -1,8 +1,8 @@
 from __future__ import division
 import torch
 import torch.nn as nn
-from torch.nn.functional import upsample, interpolate
-from da_att import PAM_Module, CAM_Module
+from torch.nn.functional import interpolate
+from src.da_att import PAM_Module, CAM_Module
 
 __all__ = ['DANet', 'get_danet']
 

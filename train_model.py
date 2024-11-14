@@ -6,8 +6,8 @@ import glob
 import torch
 import torch.nn as nn
 
-from models.danet import DANet
-from models.model import LFNet
+from src.danet import DANet
+from src.model import LFNet
 
 
 # from pymlab.train import TrainResults
